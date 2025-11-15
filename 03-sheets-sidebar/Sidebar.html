@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: Arial, sans-serif; padding: 10px; }
+      textarea { width: 100%; height: 100px; }
+      button { margin-top: 8px; padding: 6px 12px; }
+      #output { margin-top: 10px; white-space: pre-wrap; border: 1px solid #ccc; padding: 6px; min-height: 60px; }
+      label { font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <h2>Gemini Prompt Pad</h2>
+    <label for="prompt">Prompt:</label><br>
+    <textarea id="prompt" placeholder="Ask Gemini something..."></textarea><br>
+    <button onclick="callGemini()">Ask Gemini</button>
+    <button onclick="insertIntoSheet()">Insert into Sheet</button>
+    <div id="output"></div>
+
+    <script>
+      let lastResult = '';
+
+      function callGemini() {
+        const prompt = document.getElementById('prompt').value;
+        if (!prompt) {
+          alert('Please enter a prompt.');
+          return;
+        }
+        document.getElementById('output').textContent = 'Thinking...';
+        google.script.run
+          .withSuccessHandler(function(result) {
+            lastResult = result;
+            document.getElementById('output').textContent = result;
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('output').textContent = 'Error: ' + err.message;
+          })
+          .sidebarAskGemini(prompt);
+      }
+
+      function insertIntoSheet() {
+        if (!lastResult) {
+          alert('No result to insert yet.');
+          return;
+        }
+        google.script.run.insertResultIntoActiveCell(lastResult);
+      }
+    </script>
+  </body>
+</html>
