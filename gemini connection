@@ -1,0 +1,28 @@
+function gemini(prompt, modelId) {
+  const model = modelId || 'gemini-2.5-flash';
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('Set GEMINI_API_KEY in Script Properties.');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }]
+  };
+  const response = UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'x-goog-api-key': apiKey },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) {
+    throw new Error('Gemini API Error: ' + response.getContentText());
+  }
+  const json = JSON.parse(response.getContentText());
+  const parts = json.candidates?.[0]?.content?.parts || [];
+  return parts.map(p => p.text || '').join('').trim();
+}
+
+
+function testGemini() {
+  const reply = gemini("Write a haiku about Google Apps Script.");
+  Logger.log(reply);
+}
